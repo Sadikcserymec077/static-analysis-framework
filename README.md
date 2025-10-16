@@ -43,41 +43,89 @@ mobsf-project/
 Before you start:
 
 Node.js 18+ and npm
+  ## important
+pull the mobsf ui and access REST API from DOCKER for Easy Setup
+
+docker pull opensecurity/mobile-security-framework-mobsf:latest
+docker run -it --rm -p 8000:8000 opensecurity/mobile-security-framework-mobsf:latest
+
+# Default username and password: mobsf/mobsf
 
 MobSF running locally or accessible (default: http://localhost:8000)
 
 (Optional) Git & GitHub for version control
 
-⚙️ Backend Setup
+Commands — quick copy-paste for easy setup
+
+Below are ready-to-run commands and helpful package.json script snippets you can add so teammates can set up the backend and frontend quickly.
+
+1) Backend — mobsf-ui-backend
+One-line setup & run (Linux / macOS)
 cd mobsf-project/mobsf-ui-backend
-
-# Copy and edit environment variables
-cp .env.example .env
-# Open .env and set:
-# MOBSF_URL=http://localhost:8000
-# MOBSF_API_KEY=<your_mobsf_api_key>
-# PORT=4000
-
+cp .env.example .env                # copy example env
+# edit .env to set MOBSF_URL, MOBSF_API_KEY, PORT
 npm install
-npm run dev     # or `node server.js`
+mkdir -p reports/json reports/pdf    # create reports folders
+npm run dev                          # start in dev (see scripts below)
+# or: node server.js                  # start production
 
+One-line setup & run (Windows PowerShell)
+cd mobsf-project\mobsf-ui-backend
+copy .env.example .env
+# edit .env
+npm install
+mkdir reports; mkdir reports\json; mkdir reports\pdf
+npm run dev
+# or: node server.js
 
-✅ Verify connection to MobSF:
-
+Useful extra commands
+# verify backend -> MobSF connectivity (should not be 401)
 curl "http://localhost:4000/api/scans?page=1&page_size=1"
 
+# list cached reports
+curl "http://localhost:4000/api/reports"
 
-If you get 401 Unauthorized, double-check your MOBSF_API_KEY and MobSF URL.
+# fetch & save JSON report (replace <hash>)
+curl "http://localhost:4000/api/report_json/save?hash=<hash>"
 
-💻 Frontend Setup
+Recommended package.json scripts (add to backend/package.json)
+"scripts": {
+  "start": "node server.js",
+  "dev": "nodemon server.js",
+  "lint": "eslint .",
+  "prepare-reports": "mkdir -p reports/json reports/pdf || (mkdir reports & mkdir reports\\json & mkdir reports\\pdf)"
+}
+
+
+Hint: Install nodemon as a dev dependency (npm i -D nodemon) so npm run dev reloads on changes.
+
+2) Frontend — mobsf-frontend
+One-line setup & run (Linux / macOS)
 cd ../mobsf-frontend
-cp .env.local.example .env.local
-# Open .env.local and set:
-# REACT_APP_API_BASE=http://localhost:4000
+cp .env.local.example .env.local     # copy example
+# edit .env.local -> set REACT_APP_API_BASE=http://localhost:4000
+npm install
+npm start                            # dev server (http://localhost:3000)
+# build for production:
+npm run build
 
+One-line setup & run (Windows PowerShell)
+cd ..\mobsf-frontend
+copy .env.local.example .env.local
+# edit .env.local
 npm install
 npm start
+# or build:
+npm run build
 
+Recommended package.json scripts (frontend/package.json)
+"scripts": {
+  "start": "react-scripts start",
+  "build": "react-scripts build",
+  "test": "react-scripts test --env=jsdom",
+  "eject": "react-scripts eject",
+  "lint": "eslint 'src/**/*.{js,jsx}'"
+}
 
 Then open 👉 http://localhost:3000
  in your browser.
