@@ -76,7 +76,10 @@ node server.js
 # 7. Verify backend -> MobSF connectivity
 curl "http://localhost:4000/api/scans?page=1&page_size=1"
 
-💻 Frontend Setup (mobsf-frontend)
+---
+
+## 🖥️ frontend Setup (mobsf-frontend)
+```bash
 # 1. Go to frontend folder
 cd mobsf-project/mobsf-frontend
 
@@ -97,10 +100,11 @@ npm run build
 
 # 6. Open the app in browser
 # URL: http://localhost:3000
-
+---
 ⚡ Optional: Windows PowerShell Commands
 
 Backend:
+```bash
 cd mobsf-project\mobsf-ui-backend
 copy .env.example .env
 # edit .env file with MobSF details
@@ -118,7 +122,7 @@ npm install
 npm start
 # or build
 npm run build
-
+---
 🔄 How It Works
 | Step | Description                                                                  |
 | ---- | ---------------------------------------------------------------------------- |
