@@ -55,28 +55,33 @@ MobSF running locally or accessible (default: http://localhost:8000)
 
 (Optional) Git & GitHub for version control
 
-Commands — quick copy-paste for easy setup
-
-Below are ready-to-run commands and helpful package.json script snippets you can add so teammates can set up the backend and frontend quickly.
-
-1) Backend — mobsf-ui-backend
-One-line setup & run (Linux / macOS)
+# 1. Go to backend folder
 cd mobsf-project/mobsf-ui-backend
-cp .env.example .env                # copy example env
-# edit .env to set MOBSF_URL, MOBSF_API_KEY, PORT
-npm install
-mkdir -p reports/json reports/pdf    # create reports folders
-npm run dev                          # start in dev (see scripts below)
-# or: node server.js                  # start production
 
-One-line setup & run (Windows PowerShell)
-cd mobsf-project\mobsf-ui-backend
-copy .env.example .env
-# edit .env
+# 2. Copy environment file
+cp .env.example .env
+
+# 3. Open .env and set your MobSF details
+# MOBSF_URL=http://localhost:8000
+# MOBSF_API_KEY=<your_mobsf_api_key>
+# PORT=4000
+
+# 4. Install dependencies
 npm install
-mkdir reports; mkdir reports\json; mkdir reports\pdf
+
+# 5. Create reports folders
+mkdir -p reports/json reports/pdf
+
+# 6. Start backend (development mode)
 npm run dev
-# or: node server.js
+
+# OR start backend (production mode)
+node server.js
+
+# 7. Verify backend -> MobSF connectivity
+curl "http://localhost:4000/api/scans?page=1&page_size=1"
+
+
 
 Useful extra commands
 # verify backend -> MobSF connectivity (should not be 401)
@@ -99,24 +104,26 @@ Recommended package.json scripts (add to backend/package.json)
 
 Hint: Install nodemon as a dev dependency (npm i -D nodemon) so npm run dev reloads on changes.
 
-2) Frontend — mobsf-frontend
-One-line setup & run (Linux / macOS)
-cd ../mobsf-frontend
-cp .env.local.example .env.local     # copy example
-# edit .env.local -> set REACT_APP_API_BASE=http://localhost:4000
+# 1. Go to frontend folder
+cd mobsf-project/mobsf-frontend
+
+# 2. Copy environment file
+cp .env.local.example .env.local
+
+# 3. Open .env.local and set backend API base
+# REACT_APP_API_BASE=http://localhost:4000
+
+# 4. Install dependencies
 npm install
-npm start                            # dev server (http://localhost:3000)
-# build for production:
+
+# 5. Start frontend (development mode)
+npm start
+
+# OR build frontend for production
 npm run build
 
-One-line setup & run (Windows PowerShell)
-cd ..\mobsf-frontend
-copy .env.local.example .env.local
-# edit .env.local
-npm install
-npm start
-# or build:
-npm run build
+
+
 
 Recommended package.json scripts (frontend/package.json)
 "scripts": {
