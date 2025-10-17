@@ -14,3 +14,14 @@ code {
 body { background: #f5f7fb; }
 .card { border-radius: 10px; }
 footer { position: sticky; bottom: 0; background: transparent; }
+
+/* make the chart a small fixed box so it cannot overlap content */
+.humanreport-chart {
+  width: 160px;
+  height: 110px;
+  margin: 0 auto;
+}
+
+/* small legend inline */
+.humanreport-legend { font-size: 0.9rem; color: #333; }
+.humanreport-legend span { margin-right: 10px; display: inline-flex; align-items: center; gap: 6px; }

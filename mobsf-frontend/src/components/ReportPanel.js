@@ -1,71 +1,63 @@
 // src/components/ReportPanel.js
 import React, { useState, useEffect } from "react";
 import { Card, Button, Badge } from "react-bootstrap";
-import { getReportJSON, getCrucial, savePdfReport, saveJsonReport } from "../api";
+import { savePdfReport, saveJsonReport, getReportJSON } from "../api";
 import HumanReport from "./HumanReport";
 
 export default function ReportPanel({ hash, initialJsonPath }) {
   const [report, setReport] = useState(null);
   const [jsonPath, setJsonPath] = useState(initialJsonPath || null);
-  const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [msg, setMsg] = useState("");
-  const [viewMode, setViewMode] = useState("none"); // 'none' | 'json' | 'pdf' | 'summary'
+  const [viewMode, setViewMode] = useState("none"); // 'none' | 'json' | 'pdf'
 
   useEffect(() => {
-    // Reset on hash change
+    // Reset when hash changes
     setReport(null);
     setJsonPath(initialJsonPath || null);
-    setSummary(null);
     setPdfUrl(null);
     setMsg("");
     setViewMode("none");
-  }, [hash, initialJsonPath]);
 
-  // Get JSON (try direct, fallback to save)
-  const handleGetJSON = async () => {
-    if (!hash) { setMsg("No hash selected"); return; }
-    setLoading(true); setMsg("Loading JSON report...");
-    try {
-      const r = await getReportJSON(hash);
-      setReport(r.data);
-      setViewMode("json");
-      setMsg("");
-    } catch (err) {
-      // fallback: save & load
+    if (!hash) return;
+
+    // Try to fetch the report JSON (prefer cached saved JSON). If cached save fails,
+    // try a direct proxy getReportJSON (in case backend has it). We ensure we show the
+    // human-friendly JSON immediately (viewMode = 'json').
+    (async () => {
+      setLoading(true);
+      setMsg("Loading report...");
       try {
-        const r2 = await saveJsonReport(hash);
-        const payload = r2.data.data || r2.data;
+        // Primary: ask backend to save/fetch JSON and return it
+        // Equivalent to: GET /api/report_json/save?hash=...
+        const r = await saveJsonReport(hash);
+        const payload = r.data.data || r.data; // sometimes data wrapped
         setReport(payload);
-        setJsonPath(r2.data.path || `/reports/json/${hash}`);
+        setJsonPath(r.data.path || `/reports/json/${hash}`);
         setViewMode("json");
         setMsg("");
       } catch (e) {
-        const body = e?.response?.data || e?.message;
-        setMsg("JSON fetch failed: " + (typeof body === "string" ? body : JSON.stringify(body)));
+        // Fallback: try proxy GET /api/report_json?hash=...
+        try {
+          const r2 = await getReportJSON(hash);
+          setReport(r2.data);
+          setViewMode("json");
+          setMsg("");
+        } catch (e2) {
+          setMsg("Failed to load report JSON: " + (e2?.response?.data || e2?.message || e?.message));
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally { setLoading(false); }
-  };
-
-  const handleGetSummary = async () => {
-    if (!hash) { setMsg("No hash selected"); return; }
-    setLoading(true); setMsg("Loading summary...");
-    try {
-      const r = await getCrucial(hash);
-      setSummary(r.data);
-      setViewMode("summary");
-      setMsg("");
-    } catch (e) {
-      setMsg("Summary failed: " + (e?.response?.data || e?.message));
-    } finally { setLoading(false); }
-  };
+    })();
+  }, [hash, initialJsonPath]);
 
   const handlePreviewPDF = async () => {
     if (!hash) { setMsg("No hash selected"); return; }
     setLoading(true); setMsg("Fetching PDF...");
     try {
-      const r = await savePdfReport(hash); // blob response
+      const r = await savePdfReport(hash); // blob
       const blob = new Blob([r.data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
@@ -112,31 +104,21 @@ export default function ReportPanel({ hash, initialJsonPath }) {
           </div>
 
           <div>
-            <Button variant="outline-primary" size="sm" onClick={handleGetJSON} disabled={!hash || loading}>Get JSON</Button>{' '}
-            <Button variant="outline-secondary" size="sm" onClick={handleGetSummary} disabled={!hash || loading}>Get Summary</Button>{' '}
-            <Button variant="warning" size="sm" onClick={handlePreviewPDF} disabled={!hash || loading}>Preview PDF</Button>
+            <Button variant="warning" size="sm" onClick={handlePreviewPDF} disabled={!hash || loading}>Preview PDF</Button>{' '}
+            <Button variant="success" size="sm" onClick={handleDownloadPdf} disabled={!hash || loading}>Download PDF</Button>
             {viewMode === 'pdf' && <Button variant="outline-danger" size="sm" onClick={closePdf} style={{ marginLeft: 8 }}>Close PDF</Button>}
           </div>
         </div>
 
         {msg && <div className="alert alert-info py-1">{msg}</div>}
 
-        {/* JSON -> Human friendly */}
+        {/* Show the human-friendly JSON report automatically */}
         {viewMode === 'json' && report && (
           <div>
+            <div style={{ marginBottom: 8 }}>
+              {jsonPath && <small>Saved JSON: <a href={jsonPath} target="_blank" rel="noreferrer">{jsonPath}</a></small>}
+            </div>
             <HumanReport data={report} />
-          </div>
-        )}
-
-        {/* Summary (crucial) */}
-        {viewMode === 'summary' && summary && (
-          <div style={{ maxHeight: 560, overflow: 'auto' }}>
-            <h6>Summary ({summary.count})</h6>
-            <ul>
-              {summary.findings.map((f,i)=>(
-                <li key={i}><strong>{f.path}</strong>: {f.snippet}</li>
-              ))}
-            </ul>
           </div>
         )}
 
@@ -148,12 +130,7 @@ export default function ReportPanel({ hash, initialJsonPath }) {
         )}
 
         {/* placeholder */}
-        {viewMode === 'none' && <div className="text-muted">Choose Get JSON, Get Summary or Preview PDF.</div>}
-
-        {/* Download PDF button (always show when there's a hash) */}
-        <div className="mt-3 d-flex justify-content-end">
-          <Button variant="success" onClick={handleDownloadPdf} disabled={!hash}>Download PDF Report</Button>
-        </div>
+        {viewMode === 'none' && <div className="text-muted">Report will load automatically when a scan is selected. Use Preview PDF to view the PDF.</div>}
       </Card.Body>
     </Card>
   );
