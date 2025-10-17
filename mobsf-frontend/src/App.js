@@ -1,32 +1,35 @@
+// src/App.js (relevant parts)
 import React, { useState } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
 import NavBar from './components/NavBar';
 import UploadCard from './components/UploadCard';
 import ScansCard from './components/ScansCard';
 import ReportPanel from './components/ReportPanel';
 
 function App() {
-  const [selected, setSelected] = useState(null); // object with hash, etc.
-  // const [savedJsonPath, setSavedJsonPath] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleUploaded = (data) => {
+    // data = { hash }
+    setSelected({ hash: data.hash });
+    // bump refreshKey to signal ScansCard to reload
+    setRefreshKey(k => k + 1);
+  };
 
   return (
     <>
       <NavBar />
-      <Container fluid>
-        <Row>
-          <Col md={4}>
-          <UploadCard onUploaded={(data) => { setSelected({ hash: data.hash }); if (data.jsonPath) setSelected(prev => ({ ...(prev||{}), jsonPath: data.jsonPath })); }} />
-            <ScansCard onSelect={(s) => setSelected({ hash: s.MD5 || s.MD5 || s.MD5, ...s })} />
-          </Col>
-
-          <Col md={8}>
-          <ReportPanel hash={selected?.hash} initialJsonPath={selected?.jsonPath} />
-          </Col>
-        </Row>
-      </Container>
-      <footer className="text-center text-muted py-3">
-        <small>MobSF UI — built with ❤️ & Bootstrap</small>
-      </footer>
+      <div className="container-fluid">
+        <div className="row">
+          <div className="col-md-4">
+            <UploadCard onUploaded={handleUploaded} />
+            <ScansCard onSelect={(s) => setSelected({ hash: s.MD5 || s.MD5 || s.MD5 })} refreshKey={refreshKey} />
+          </div>
+          <div className="col-md-8">
+            <ReportPanel hash={selected?.hash} />
+          </div>
+        </div>
+      </div>
     </>
   );
 }

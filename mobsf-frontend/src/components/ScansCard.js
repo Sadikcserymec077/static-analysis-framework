@@ -3,13 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { Card, ListGroup, Button, Badge } from 'react-bootstrap';
 import { getScans } from '../api';
 
-export default function ScansCard({ onSelect }) {
+export default function ScansCard({ onSelect, refreshKey }) {
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchScans();
-  }, []);
+  useEffect(() => { fetchScans(); }, []); // initial load
+  useEffect(() => { if (refreshKey !== undefined) fetchScans(); }, [refreshKey]); // refresh when key changes
 
   async function fetchScans() {
     setLoading(true);
@@ -18,9 +17,7 @@ export default function ScansCard({ onSelect }) {
       setScans(r.data.content || []);
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   return (
@@ -34,9 +31,7 @@ export default function ScansCard({ onSelect }) {
               <div>
                 <div className="fw-bold">{s.APP_NAME || s.FILE_NAME}</div>
                 <div className="text-muted small">{s.PACKAGE_NAME}</div>
-                <div className="text-muted small">
-                  v{ s.VERSION_NAME || '?' } • { new Date(s.TIMESTAMP).toLocaleString() }
-                </div>
+                <div className="text-muted small">v{ s.VERSION_NAME || '?' } • { new Date(s.TIMESTAMP).toLocaleString() }</div>
               </div>
               <div className="text-end">
                 <Button size="sm" onClick={() => onSelect && onSelect(s)}>Open</Button>
