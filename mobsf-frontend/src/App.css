@@ -47,3 +47,8 @@
 /* small legend inline */
 .humanreport-legend { font-size: 0.9rem; color: #333; }
 .humanreport-legend span { margin-right: 10px; display: inline-flex; align-items: center; gap: 6px; }
+
+.table-compact td, .table-compact th {
+  padding: 2px 6px !important;
+  font-size: 0.85rem !important;
+}

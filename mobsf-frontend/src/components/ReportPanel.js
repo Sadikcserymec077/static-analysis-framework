@@ -22,23 +22,19 @@ export default function ReportPanel({ hash, initialJsonPath }) {
 
     if (!hash) return;
 
-    // Try to fetch the report JSON (prefer cached saved JSON). If cached save fails,
-    // try a direct proxy getReportJSON (in case backend has it). We ensure we show the
-    // human-friendly JSON immediately (viewMode = 'json').
+    // Auto-load saved JSON report when a new hash is selected
     (async () => {
       setLoading(true);
       setMsg("Loading report...");
       try {
-        // Primary: ask backend to save/fetch JSON and return it
-        // Equivalent to: GET /api/report_json/save?hash=...
         const r = await saveJsonReport(hash);
-        const payload = r.data.data || r.data; // sometimes data wrapped
+        const payload = r.data.data || r.data;
         setReport(payload);
         setJsonPath(r.data.path || `/reports/json/${hash}`);
         setViewMode("json");
         setMsg("");
       } catch (e) {
-        // Fallback: try proxy GET /api/report_json?hash=...
+        // fallback to GET proxy
         try {
           const r2 = await getReportJSON(hash);
           setReport(r2.data);
@@ -52,6 +48,33 @@ export default function ReportPanel({ hash, initialJsonPath }) {
       }
     })();
   }, [hash, initialJsonPath]);
+
+  // Explicit Summary button handler (reloads JSON and shows human report)
+  const handleShowSummary = async () => {
+    if (!hash) { setMsg("No hash selected"); return; }
+    setLoading(true);
+    setMsg("Loading summary...");
+    try {
+      const r = await saveJsonReport(hash);
+      const payload = r.data.data || r.data;
+      setReport(payload);
+      setJsonPath(r.data.path || `/reports/json/${hash}`);
+      setViewMode("json");
+      setMsg("");
+    } catch (e) {
+      // fallback to GET proxy
+      try {
+        const r2 = await getReportJSON(hash);
+        setReport(r2.data);
+        setViewMode("json");
+        setMsg("");
+      } catch (e2) {
+        setMsg("Failed to load summary: " + (e2?.response?.data || e2?.message || e?.message));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePreviewPDF = async () => {
     if (!hash) { setMsg("No hash selected"); return; }
@@ -104,6 +127,8 @@ export default function ReportPanel({ hash, initialJsonPath }) {
           </div>
 
           <div>
+            {/* Summary button to switch to human-friendly report */}
+            <Button variant="outline-secondary" size="sm" onClick={handleShowSummary} disabled={!hash || loading}>Summary</Button>{' '}
             <Button variant="warning" size="sm" onClick={handlePreviewPDF} disabled={!hash || loading}>Preview PDF</Button>{' '}
             <Button variant="success" size="sm" onClick={handleDownloadPdf} disabled={!hash || loading}>Download PDF</Button>
             {viewMode === 'pdf' && <Button variant="outline-danger" size="sm" onClick={closePdf} style={{ marginLeft: 8 }}>Close PDF</Button>}
@@ -112,7 +137,7 @@ export default function ReportPanel({ hash, initialJsonPath }) {
 
         {msg && <div className="alert alert-info py-1">{msg}</div>}
 
-        {/* Show the human-friendly JSON report automatically */}
+        {/* Show the human-friendly JSON report */}
         {viewMode === 'json' && report && (
           <div>
             <div style={{ marginBottom: 8 }}>
@@ -130,7 +155,7 @@ export default function ReportPanel({ hash, initialJsonPath }) {
         )}
 
         {/* placeholder */}
-        {viewMode === 'none' && <div className="text-muted">Report will load automatically when a scan is selected. Use Preview PDF to view the PDF.</div>}
+        {viewMode === 'none' && <div className="text-muted">Report will load automatically when a scan is selected. Use Preview PDF or Summary to switch views.</div>}
       </Card.Body>
     </Card>
   );
