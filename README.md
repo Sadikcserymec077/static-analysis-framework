@@ -187,8 +187,3 @@ Always comply with MobSF’s license and your organization’s security policies
 
 ---
 
-✅ **How to use:**  
-Just copy this entire block → paste into your `mobsf-project/README.md` → commit and push.  
-GitHub will render it beautifully with one-click copy buttons on each code block.  
-
-Would you like me to also create a matching **`CONTRIBUTING.md`** or a **`scripts/setup-local.sh`** helper for one-click environment setup?
